@@ -1,0 +1,80 @@
+# El paquete de EAS contiene la aplicación móvil y sus contratos compartidos.
+/*
+!/v2
+/v2/*
+!/v2/mobile
+!/v2/shared
+
+# Qué NO se sube a EAS Build.
+#
+# IMPORTANTE: este archivo va en la RAÍZ DEL REPOSITORIO, no en v2/mobile.
+# EAS empaqueta desde la raíz del repo (se ve en las rutas del log:
+# /home/expo/workingdir/build/v2/mobile/...), así que un .easignore dentro de
+# v2/mobile se ignora por completo. Ya se intentó y el archivo siguió pesando
+# 641 MB.
+#
+# Sin esto se subían el .next de la web (842 MB), sus node_modules (727 MB), el
+# histórico de git y todo el material de marketing: cosas que la app móvil no
+# necesita para compilarse.
+#
+# OJO: .easignore SUSTITUYE al .gitignore, no se suma. Hay que repetir aquí lo
+# básico (node_modules, logs...).
+
+# ── Dependencias y artefactos ───────────────────────────────────────────────
+node_modules/
+**/node_modules/
+**/.expo/
+**/dist/
+**/.next/
+/v2/mobile/android/
+/v2/mobile/ios/
+**/*.tsbuildinfo
+
+# ── El proyecto web entero: no interviene en la build móvil ─────────────────
+v2/web/
+v2/supabase/
+v2/scripts/
+v2/docs/
+
+# ── Material que no es código ───────────────────────────────────────────────
+marketing/
+erasmus-fundeun/
+docs/
+*.docx
+*.xlsx
+*.pdf
+*.png
+*.jpg
+*.jpeg
+# ...salvo los assets que la app SÍ necesita (el ! reincluye)
+!v2/mobile/assets/**
+
+# ── Ruido local ─────────────────────────────────────────────────────────────
+.git/
+.github/
+.claude/
+*.log
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Auditoría sep-2026: EAS empaqueta desde la raíz del repositorio.
+# Excluir también las carpetas locales que están dentro de v2.
+v2/_claude_export/
+v2/tmp/
+v2/output/
+v2/marketing/
+v2/erasmus-fundeun/
+v2/.claude/
+v2/.codex/
+v2/.agents/
+**/.codex/
+**/.agents/
+**/credentials.json
+**/*.keystore
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.mobileprovision

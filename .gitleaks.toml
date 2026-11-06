@@ -1,0 +1,81 @@
+# gitleaks configuration for Franky
+#
+# Detects secrets accidentally committed. Run locally with:
+#   gitleaks detect --config=.gitleaks.toml --verbose --redact
+# Or as a pre-commit hook (recommended).
+
+title = "Franky gitleaks"
+
+[extend]
+# Inherit the default ruleset (covers AWS keys, GitHub tokens, generic JWTs, etc.)
+useDefault = true
+
+# ─── Custom rules for Franky's stack ─────────────────────────────────
+
+[[rules]]
+id = "supabase-anon-jwt"
+description = "Supabase anon key (NEXT_PUBLIC, safe IF intentional)"
+regex = '''eyJ[A-Za-z0-9+/=_-]{20,}\.[A-Za-z0-9+/=_-]{20,}\.[A-Za-z0-9+/=_-]{20,}'''
+keywords = ["eyJ"]
+# JWTs are everywhere — only flag if NOT in an env.local context.
+# False positives go in [allowlist] below.
+
+[[rules]]
+id = "supabase-service-role"
+description = "Supabase service-role key — MUST NEVER be committed"
+regex = '''SUPABASE_SERVICE_ROLE_KEY\s*[:=]\s*['"]?eyJ[A-Za-z0-9+/=_-]+\.[A-Za-z0-9+/=_-]+\.[A-Za-z0-9+/=_-]+'''
+keywords = ["SUPABASE_SERVICE_ROLE_KEY"]
+
+[[rules]]
+id = "stripe-live-key"
+description = "Stripe live secret key"
+regex = '''sk_live_[0-9A-Za-z]{20,}'''
+keywords = ["sk_live_"]
+
+[[rules]]
+id = "stripe-restricted-key"
+description = "Stripe restricted key"
+regex = '''rk_live_[0-9A-Za-z]{20,}'''
+keywords = ["rk_live_"]
+
+[[rules]]
+id = "google-api-key"
+description = "Google API key"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+keywords = ["AIza"]
+
+[[rules]]
+id = "openai-key"
+description = "OpenAI API key"
+regex = '''sk-[A-Za-z0-9]{20,}'''
+keywords = ["sk-"]
+
+[[rules]]
+id = "private-pem"
+description = "Private key PEM block"
+regex = '''-----BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----'''
+
+# ─── Allowlist (legitimate "secret-like" content) ────────────────────
+# gitleaks v8 espera UNA tabla [allowlist] (mapa), no un array [[allowlist]]:
+# con el array el binario aborta con "'Allowlist' expected a map, got 'slice'"
+# y el job de CI muere antes de escanear nada.
+
+[allowlist]
+description = "Docs/placeholders, .env (gitignored) y fixtures con tokens falsos"
+paths = [
+  # `docs/` ENTERO estaba excluido: por eso la contrasena filtrada del
+  # incidente del 03-jun vivio meses en el postmortem sin que el CI dijera
+  # nada. Ahora solo se excluyen los ficheros concretos que documentan
+  # patrones de secreto a proposito.
+  '''(^|/)docs/security/(templates|runbooks)/''',
+  '''(^|/)\.github/''',
+  '''(^|/)\.gitleaks\.toml$''',
+  '''(^|/)SECURITY\.md$''',
+  '''(^|/)public/ads\.txt$''',
+  '''(^|/)\.env(\.|$)''',
+]
+regexes = [
+  '''ca-pub-PLACEHOLDER''',
+  '''sk_test_[a-z]{1,5}''',
+  '''dev-bypass''',
+]

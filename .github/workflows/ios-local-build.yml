@@ -1,0 +1,168 @@
+name: iOS signed build on GitHub
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_profile:
+        description: 'Explicit build profile; beta-demo uses the reviewed version reservation'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - beta-demo
+      build_number:
+        description: 'New iOS build number (beta-demo must match the reviewed reservation)'
+        required: true
+        default: '26'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: franky-ios-signed-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || (inputs.build_profile == 'beta-demo' && (github.ref == 'refs/heads/codex/workspaces-2-4-0' || github.ref == 'refs/heads/codex/franky-pro-integration')))
+    name: Signed IPA (no Expo Cloud build)
+    runs-on: macos-15-intel
+    timeout-minutes: 75
+    defaults:
+      run:
+        shell: bash
+        working-directory: v2/mobile
+    env:
+      CI: '1'
+      EAS_NO_VCS: '1'
+      BUILD_NUMBER: ${{ inputs.build_number }}
+      BUILD_PROFILE: ${{ inputs.build_profile }}
+      # Deliberately pinned: editing the reservation requires another reviewed workflow update.
+      BETA_REGISTRY_SHA256: '84a8dcc2af2113bfce68d0022d733173da10f9138c196ae1942f9d40b6da567e'
+      DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
+    steps:
+      - name: Check out the approved branch
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            v2/mobile
+            v2/shared
+            v2/docs/workspaces
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+
+      - name: Check signing access and native tools
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$EXPO_TOKEN" ]]; then
+            echo '::error::Missing repository secret EXPO_TOKEN. No build was started.'
+            exit 1
+          fi
+          printf 'EAS_LOCAL_BUILD_WORKINGDIR=%s/franky-ios-build\nEAS_LOCAL_BUILD_ARTIFACTS_DIR=%s/franky-ios-artifacts\n' "$RUNNER_TEMP" "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          pod --version
+          fastlane --version
+
+      - name: Install locked dependencies and check types
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npm install --global eas-cli@24.0.0 --no-audit --no-fund
+
+      - name: Prepare explicit build number
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+          const eas = JSON.parse(fs.readFileSync('eas.json', 'utf8'));
+          const number = process.env.BUILD_NUMBER;
+          const profile = process.env.BUILD_PROFILE;
+          if (!['production', 'beta-demo'].includes(profile)) throw new Error('Select an explicit supported build profile');
+          if (!/^[1-9][0-9]{0,7}$/.test(number || '')) throw new Error('Use a positive numeric build number');
+          if (profile === 'beta-demo') {
+            const bytes = fs.readFileSync('../docs/workspaces/version-registry.json');
+            const hash = crypto.createHash('sha256').update(bytes).digest('hex');
+            if (hash !== process.env.BETA_REGISTRY_SHA256) throw new Error('Beta version registry changed; review and pin its hash before compiling');
+            const registry = JSON.parse(bytes);
+            const beta = registry.preparedBeta;
+            if (registry.application !== 'es.franky.app' || beta.version !== app.expo.version ||
+                beta.iosBuildNumber !== number || beta.iosBuildNumber !== app.expo.ios.buildNumber ||
+                beta.androidVersionCode !== app.expo.android.versionCode || beta.easBuildProfile !== profile ||
+                beta.autoIncrement !== false || beta.state !== 'local_configuration_only' ||
+                beta.signedBuildStarted !== false || beta.submitted !== false ||
+                !beta.iosNumberCheckedAgainstApple || beta.nativeDigitalSalesEnabled !== false ||
+                beta.environment !== 'production' || beta.globalWorkspaceAndGrowthFlags !== 'remain_disabled') {
+              throw new Error('Beta does not match the reviewed unused version reservation');
+            }
+            if (eas.build[profile]?.autoIncrement !== false || eas.build[profile]?.extends !== 'production' ||
+                eas.build[profile]?.distribution !== 'store' ||
+                eas.build[profile]?.env?.EXPO_PUBLIC_NATIVE_BILLING_ENABLED !== 'false') {
+              throw new Error('Beta profile must preserve explicit numbers and disabled digital sales');
+            }
+          } else if (Number(number) <= Number(app.expo.ios.buildNumber)) {
+            throw new Error('Production requires a new build number greater than app.json');
+          }
+          if (app.expo.ios.bundleIdentifier !== 'es.franky.app' || app.expo.extra.eas.projectId !== '7582e6cd-b708-44b6-bc26-fd118e0046aa') {
+            throw new Error('Unexpected app identity');
+          }
+          if (eas.cli.appVersionSource !== 'local') throw new Error('Build numbers must be local');
+          app.expo.ios.buildNumber = number;
+          eas.build['github-ios'] = { extends: profile, autoIncrement: false, credentialsSource: 'remote' };
+          fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          fs.writeFileSync('eas.json', JSON.stringify(eas, null, 2) + '\n');
+          console.log(`Compiling ${profile}: ${app.expo.version} (${number}) from ${process.env.GITHUB_SHA}`);
+          NODE
+          mkdir -p "$EAS_LOCAL_BUILD_ARTIFACTS_DIR"
+
+      - name: Compile and sign on this Mac
+        timeout-minutes: 60
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          eas build --platform ios --profile github-ios --local --non-interactive --freeze-credentials --output "$EAS_LOCAL_BUILD_ARTIFACTS_DIR/franky.ipa"
+
+      - name: Verify signed app identity
+        run: |
+          set -euo pipefail
+          verify_dir="$RUNNER_TEMP/franky-ipa-verification"
+          mkdir -p "$verify_dir"
+          unzip -q "$EAS_LOCAL_BUILD_ARTIFACTS_DIR/franky.ipa" -d "$verify_dir"
+          apps=("$verify_dir"/Payload/*.app)
+          [[ ${#apps[@]} -eq 1 && -d "${apps[0]}" ]]
+          app="${apps[0]}"
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Info.plist")" == 'es.franky.app' ]]
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$app/Info.plist")" == "$BUILD_NUMBER" ]]
+          codesign --verify --deep --strict "$app"
+          codesign -d --entitlements :- "$app" > "$verify_dir/entitlements.plist" 2>/dev/null
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print com.apple.developer.team-identifier' "$verify_dir/entitlements.plist")" == 'X5D8A42K4R' ]]
+          shasum -a 256 "$EAS_LOCAL_BUILD_ARTIFACTS_DIR/franky.ipa" > "$EAS_LOCAL_BUILD_ARTIFACTS_DIR/franky.ipa.sha256"
+          printf 'Source: %s\nVersion: %s\nBuild: %s\n' "$GITHUB_SHA" "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$app/Info.plist")" "$BUILD_NUMBER" > "$EAS_LOCAL_BUILD_ARTIFACTS_DIR/build.txt"
+
+      - name: Save signed IPA for TestFlight upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: franky-ios-${{ inputs.build_number }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/franky-ios-artifacts/franky.ipa
+            ${{ runner.temp }}/franky-ios-artifacts/franky.ipa.sha256
+            ${{ runner.temp }}/franky-ios-artifacts/build.txt
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+      - name: Record next step
+        run: |
+          printf 'Signed iOS build %s is attached to this run. Upload it to TestFlight, complete physical-device checks, then select it for App Review. This workflow does not submit to review.\n' "$BUILD_NUMBER" >> "$GITHUB_STEP_SUMMARY"

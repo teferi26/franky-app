@@ -1,0 +1,52 @@
+version: 2
+updates:
+  # ─── web app ─────────────────────────────────────────────────────────
+  - package-ecosystem: npm
+    directory: /v2/web
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - web
+    groups:
+      next-stack:
+        patterns:
+          - "next"
+          - "@next/*"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      supabase:
+        patterns:
+          - "@supabase/*"
+      stripe:
+        patterns:
+          - "stripe"
+          - "@stripe/*"
+      security-stack:
+        patterns:
+          - "dompurify"
+          - "isomorphic-dompurify"
+          - "markdown-it"
+          - "@upstash/*"
+          - "zod"
+          - "@sentry/*"
+      radix:
+        patterns:
+          - "@radix-ui/*"
+    # Only ship security updates immediately; bundle the rest weekly.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+
+  # ─── github actions ───────────────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3

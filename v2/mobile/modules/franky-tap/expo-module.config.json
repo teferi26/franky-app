@@ -1,0 +1,9 @@
+{
+  "platforms": ["ios", "android", "web"],
+  "ios": {
+    "modules": ["FrankyTapModule"]
+  },
+  "android": {
+    "modules": ["es.franky.tap.FrankyTapModule"]
+  }
+}

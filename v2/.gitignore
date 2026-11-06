@@ -1,0 +1,70 @@
+# ─── Dependencias y builds ───────────────────────────────────────────────
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# ─── Secretos — NUNCA commitear ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ─── Sesiones/worktrees de Claude (cientos de MB, no son código) ─────────
+.claude/worktrees/
+
+# ─── Datos generados de pipelines (JSON + PDFs crudos, ~regenerables) ────────
+data-ocio/
+data-notas-corte/
+
+# ─── Salidas de debug y temporales ───────────────────────────────────────
+out.txt
+output.txt
+output_seed.txt
+output/
+_audit_extracted.txt
+pw-results*.txt
+*.log
+build-log.txt
+
+# ─── Ficheros de Office bloqueados ───────────────────────────────────────
+.~lock.*#
+~$*
+
+# ─── SO ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Documentos personales / marketing (mover fuera del repo) ────────────
+WhatsApp Image*
+TFG_*
+Franky_Dossier_*
+Franky_Universidades_Espana_Outreach.xlsx
+Plan_Organizacion_Drive.xlsx
+solicitud-defensa.md
+Email_Ana_UMH.md
+Email_Lola_UM.md
+
+# Duplicados de web/public/img en la raiz de v2 (destrackeados 2026-06-10)
+/hero-*.png
+/franky-icon.png
+/franky-logo.png
+/icon-*.png
+PLAN_CAPTACION_*.md
+.claude/settings.local.json
+
+# Credenciales de firma y de servicios móviles (auditoría 27-jul-2026).
+# Hoy no existen en disco, pero el día que se descargue una acabaría
+# commiteada: ninguna estaba cubierta por ningún .gitignore.
+google-services.json
+GoogleService-Info.plist
+credentials.json
+*.p8
+*.p12
+*.keystore
+*.jks
+# Un settings.local.json con la service_role key dentro ya acabó una vez en un
+# blob de git (ver incidente del 03-jun).
+**/.claude/settings.local.json

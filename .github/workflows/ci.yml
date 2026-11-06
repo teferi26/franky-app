@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    # main y las ramas de trabajo de agentes (codex/**, claude/**): así un
+    # fallo aparece antes de abrir la PR, no después de mergear.
+    branches: [main, "codex/**", "claude/**"]
+    paths:
+      - "v2/web/**"
+      - "v2/mobile/**"
+      - "v2/shared/**"
+      - "v2/supabase/migrations/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    # Cualquier rama destino (también PRs apiladas entre ramas de trabajo).
+    paths:
+      - "v2/web/**"
+      - "v2/mobile/**"
+      - "v2/shared/**"
+      - "v2/supabase/migrations/**"
+      - ".github/workflows/ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: Select CI event
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      run-checks: ${{ steps.select.outputs.run-checks }}
+    steps:
+      - name: Avoid duplicate branch and pull request checks
+        id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # PR checks validate the merge result. A branch without an open PR
+          # still gets the same checks on push, and main always gets checked.
+          run_checks=true
+          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" != "refs/heads/main" ]]; then
+            if pr_count=$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" \
+              -f state=open -f "head=$GITHUB_REPOSITORY_OWNER:$GITHUB_REF_NAME" \
+              -f per_page=1 --jq 'length'); then
+              if [[ "$pr_count" -gt 0 ]]; then
+                run_checks=false
+              fi
+            else
+              echo "::warning::Could not check for an open PR; running branch checks to preserve coverage."
+            fi
+          fi
+          echo "run-checks=$run_checks" >> "$GITHUB_OUTPUT"
+
+  web:
+    name: Web (typecheck + lint + tests)
+    needs: coverage
+    if: needs.coverage.outputs.run-checks == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Valores ficticios para que el cliente public (env.ts) no falle al
+    # importarse desde los tests. No son secretos reales, solo placeholders
+    # con el formato que zod valida (url y longitud minima).
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci_placeholder_anon_key_0123456789
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            v2/web/package-lock.json
+            v2/mobile/package-lock.json
+      - name: Install deps
+        working-directory: v2/web
+        run: npm ci --prefer-offline --no-audit
+      - name: Install native SDK used by cross-platform tests
+        working-directory: v2/mobile
+        run: npm ci --prefer-offline --no-audit
+      - name: Typecheck
+        working-directory: v2/web
+        run: npm run typecheck
+      - name: Lint
+        working-directory: v2/web
+        # Errores bloquean; los warnings (img, deps de hooks, any en tests) no.
+        run: npm run lint
+      - name: Unit tests
+        working-directory: v2/web
+        run: npm test
+
+  web-build:
+    name: Web (next build)
+    needs: coverage
+    if: needs.coverage.outputs.run-checks == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # El build es el gate que faltaba: typecheck y tests pasaban y aun asi se
+    # podia subir un build roto (Vercel despliega main automaticamente). Los
+    # valores son placeholders: las paginas estaticas que tocan la BD estan
+    # envueltas en try/catch y degradan solas cuando el fetch falla.
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci_placeholder_anon_key_0123456789
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # 24 y no 20: es lo que declara engines en package.json y lo que
+          # corre en Vercel; compilar con otra major esconde diferencias.
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            v2/web/package-lock.json
+            v2/mobile/package-lock.json
+      - name: Install deps
+        working-directory: v2/web
+        run: npm ci --prefer-offline --no-audit
+      - name: Install native SDK used by cross-platform tests
+        working-directory: v2/mobile
+        run: npm ci --prefer-offline --no-audit
+      - name: Build
+        working-directory: v2/web
+        run: npm run build
+
+  mobile:
+    name: Movil (typecheck + lint)
+    needs: coverage
+    if: needs.coverage.outputs.run-checks == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: v2/mobile/package-lock.json
+      - name: Install deps
+        working-directory: v2/mobile
+        run: npm ci --prefer-offline --no-audit
+      - name: Typecheck
+        working-directory: v2/mobile
+        run: npx tsc --noEmit
+      - name: Lint
+        working-directory: v2/mobile
+        run: npm run lint

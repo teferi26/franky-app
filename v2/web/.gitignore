@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+dist/
+hostinger-deploy/
+
+# Environment variables (never commit secrets)
+# .env* cubre también backups tipo .env.local.backup, que antes se escapaban
+.env*
+!.env.example
+
+# Vercel
+.vercel/
+
+# Debug / temp files
+*.zip
+*.log
+build-log.txt
+login-response.html
+pw-results*.txt
+output_seed.txt
+output.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+.env*.local
+
+# Config local de Claude
+.claude/

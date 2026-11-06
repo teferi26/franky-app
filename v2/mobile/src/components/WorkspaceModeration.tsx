@@ -1,0 +1,37 @@
+import React, { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Text, TextInput, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useWorkspace } from './WorkspaceProvider';
+import { Btn, Card, Chip } from './ui';
+import { MODERATION_LABELS, moderationPayload, moderationError, type ModerationAction, type ModerationHistory } from '../../../shared/workspace-moderation';
+import { workspaceAttempt, type WorkspaceAttempt } from '../../../shared/workspace-attempt';
+import { C, F } from '@/theme';
+
+export function WorkspaceModeration({ reportId, onChanged }: { reportId: string; onChanged(): Promise<void> | void }) {
+ const { active, run, isCurrent } = useWorkspace(); const [history, setHistory] = useState<ModerationHistory | null>(null);
+ const [reason, setReason] = useState(''), [days, setDays] = useState('7'), [indefinite, setIndefinite] = useState(false), [busy, setBusy] = useState(false), [loading, setLoading] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
+ const sequence = useRef(0), lock = useRef(false), attempt = useRef<WorkspaceAttempt | null>(null);
+ const load = useCallback(async (next?: string) => {
+  if (!active) return; const request = ++sequence.current; setLoading(true);
+  try { const page = await run<ModerationHistory>('get_workspace_moderation_history', { p_report_id: reportId, p_cursor: next ?? null, p_limit: 30 }); if (isCurrent(active.id) && request === sequence.current) setHistory(previous => next && previous ? { ...page, items: [...previous.items, ...page.items.filter(item => !previous.items.some(old => old.id === item.id))] } : page); }
+  catch (err) { if (isCurrent(active.id) && request === sequence.current) setError(moderationError(err)); }
+  finally { if (isCurrent(active.id) && request === sequence.current) setLoading(false); }
+ }, [active?.id, run, isCurrent, reportId]);
+ useFocusEffect(useCallback(() => { void load(); return () => { ++sequence.current; }; }, [load]));
+ if (!active) return null;
+ const act = async (action: ModerationAction, decisionId?: string) => {
+  if (lock.current || !isCurrent(active.id)) return;
+  let payload: Record<string, unknown>; try { payload = moderationPayload(action, reason, indefinite ? null : days, decisionId); } catch (err) { setError((err as Error).message); return; }
+  lock.current = true; setBusy(true); setError(''); setNotice('');
+  attempt.current = workspaceAttempt(attempt.current, { org: active.id, reportId, action, payload }, () => `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  try { await run('workspace_resource_action', { p_resource_type: 'moderation', p_resource_id: reportId, p_action: action, p_data: { ...payload, client_request_id: attempt.current.key } }); if (!isCurrent(active.id)) return; attempt.current = null; setReason(''); setNotice(active.demo_cohort_id ? 'Decisión simulada guardada en esta demostración.' : 'Decisión guardada. La persona afectada podrá pedir revisión a Franky.'); await load(); await onChanged(); }
+  catch (err) { if (isCurrent(active.id)) setError(moderationError(err)); }
+  finally { lock.current = false; if (isCurrent(active.id)) setBusy(false); }
+ };
+ const confirm = (action: ModerationAction, decisionId?: string) => Alert.alert(MODERATION_LABELS[action], action === 'sanction' ? `Se suspenderá la participación en este campus ${indefinite ? 'hasta una nueva revisión' : `durante ${days} días`}. La persona recibirá el motivo y podrá apelar.` : 'La decisión queda en el historial y se notificará a la persona afectada.', [{ text: 'Volver', style: 'cancel' }, { text: 'Confirmar', style: ['remove', 'sanction'].includes(action) ? 'destructive' : 'default', onPress: () => void act(action, decisionId) }]);
+ return <View style={{ gap: 14 }}><Card style={{ gap: 12 }}><Text style={F.h3}>Moderación de tu campus</Text><Text style={F.small}>Ocultar limita la visibilidad. Retirar marca la publicación como retirada. Ambas decisiones conservan el historial y permiten apelar a Franky. La identidad de autores anónimos permanece protegida.</Text>{history ? <Text style={F.label}>Estado: {({ visible: 'Visible', hidden: 'Oculta', removed: 'Retirada' })[history.target_state]}</Text> : null}<TextInput accessibilityLabel="Motivo de moderación" value={reason} onChangeText={setReason} editable={!busy} maxLength={1000} multiline placeholder="Explica el motivo de la decisión" placeholderTextColor={C.muted} style={{ minHeight: 100, textAlignVertical: 'top', borderWidth: 1, borderColor: C.border, padding: 12, borderRadius: 14, color: C.text }} />
+  {(['resolve', 'hide', 'remove', 'restore'] as const).map(action => <Btn key={action} label={MODERATION_LABELS[action]} variant={action === 'remove' ? 'danger' : 'secondary'} disabled={busy || reason.trim().length < 5 || action === 'restore' && !history?.can_restore} onPress={() => confirm(action)} />)}
+  <Text style={F.h3}>Suspensión de participación</Text><View style={{ flexDirection: 'row', gap: 8 }}><Chip label="Temporal" active={!indefinite} onPress={() => { if (!busy) setIndefinite(false); }} /><Chip label="Indefinida" active={indefinite} onPress={() => { if (!busy) setIndefinite(true); }} /></View>{!indefinite ? <TextInput accessibilityLabel="Duración de la sanción en días" value={days} onChangeText={setDays} editable={!busy} keyboardType="number-pad" maxLength={3} placeholder="Entre 1 y 365 días" style={{ borderWidth: 1, borderColor: C.border, padding: 12, borderRadius: 14, color: C.text }} /> : null}<Btn label="Suspender participación" variant="danger" disabled={busy || reason.trim().length < 5} onPress={() => confirm('sanction')} />
+ </Card>{error ? <Text accessibilityRole="alert" style={{ color: C.errorText }}>{error}</Text> : null}{notice ? <Text accessibilityRole="alert" style={F.small}>{notice}</Text> : null}<View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}><Text style={F.h3}>Historial de decisiones</Text><Btn label="Actualizar" small variant="ghost" disabled={loading || busy} onPress={() => void load()} /></View>{loading ? <ActivityIndicator color={C.blue} /> : null}
+ {history?.items.map(item => <Card key={item.id} style={{ gap: 8 }}><Text style={F.body}>{MODERATION_LABELS[item.action]}</Text><Text style={F.small}>{new Date(item.created_at).toLocaleString('es-ES')}</Text><Text style={F.body}>{item.reason}</Text>{item.action === 'sanction' ? <Text style={F.small}>{item.sanction_status === 'revoked' ? 'Sanción levantada' : item.sanction_status === 'expired' ? 'Sanción terminada' : item.sanction_expires_at ? `Vigente hasta ${new Date(item.sanction_expires_at).toLocaleString('es-ES')}` : 'Vigente sin fecha de fin'}</Text> : null}{item.appeal_status ? <Text style={F.small}>Apelación: {({ pending: 'pendiente de Franky', upheld: 'decisión confirmada', overturned: 'decisión revocada' })[item.appeal_status]}</Text> : null}{item.action === 'sanction' && item.sanction_status === 'active' ? <Btn label="Levantar esta sanción" variant="secondary" disabled={busy || reason.trim().length < 5} onPress={() => confirm('lift_sanction', item.id)} /> : null}</Card>)}{!loading && history && !history.items.length ? <Text style={F.small}>Todavía no hay decisiones en este reporte.</Text> : null}{history?.next_cursor ? <Btn label="Más decisiones" variant="secondary" disabled={loading} onPress={() => void load(history.next_cursor!)} /> : null}</View>;
+}

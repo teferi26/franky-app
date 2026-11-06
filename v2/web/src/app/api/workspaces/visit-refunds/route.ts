@@ -1,0 +1,7 @@
+import {NextRequest,NextResponse} from 'next/server';
+import {z} from 'zod';
+import {createRequestSupabase} from '@/lib/supabase-server';
+import {validateBody} from '@/lib/api-helpers';
+const schema=z.object({organizationId:z.string().uuid(),bookingId:z.string().uuid(),action:z.enum(['request','approve','reject']),reason:z.string().trim().min(5).max(1000)});
+export async function GET(req:NextRequest){const org=req.nextUrl.searchParams.get('organization'),booking=req.nextUrl.searchParams.get('booking');if(!z.string().uuid().safeParse(org).success||!z.string().uuid().safeParse(booking).success)return NextResponse.json({error:'Elige una visita.'},{status:400});const s=await createRequestSupabase(req);const{data,error}=await s.rpc('get_workspace_visit_refunds',{p_organization_id:org,p_booking_id:booking});return NextResponse.json(error?{error:'No tienes acceso a la visita.'}:data,{status:error?403:200,headers:{'Cache-Control':'private, no-store'}});}
+export async function POST(req:NextRequest){const b=await validateBody(req,schema);if(b instanceof NextResponse)return b;const s=await createRequestSupabase(req);const{data,error}=await s.rpc('workspace_visit_refund_action',{p_organization_id:b.organizationId,p_booking_id:b.bookingId,p_action:b.action,p_reason:b.reason});return NextResponse.json(error?{error:error.message.includes('mfa')?'Confirma tu identidad con el segundo factor.':'No se pudo registrar la decisión. Comprueba los permisos, el pago y el estado de la solicitud.'}:data,{status:error?400:200,headers:{'Cache-Control':'private, no-store'}});}

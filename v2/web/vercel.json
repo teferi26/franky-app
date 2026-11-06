@@ -1,0 +1,80 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "index, follow"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "redirects": [],
+  "rewrites": [],
+  "crons": [
+    {
+      "path": "/api/cron/organization-billing",
+      "schedule": "*/20 * * * *"
+    },
+    {
+      "path": "/api/cron/professional",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/franky-card",
+      "schedule": "35 * * * *"
+    },
+    {
+      "path": "/api/cron/event-refunds",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/growth",
+      "schedule": "25 * * * *"
+    },
+    {
+      "path": "/api/cron/account-erasures",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/housing-billing",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/publication-reviews",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/origin-orders",
+      "schedule": "15 7 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-invoices",
+      "schedule": "0 9 2 * *"
+    },
+    {
+      "path": "/api/cron/becas-alerts",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/moderation-auth",
+      "schedule": "* * * * *"
+    }
+  ]
+}

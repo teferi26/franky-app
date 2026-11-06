@@ -1,0 +1,4 @@
+import {NextRequest,NextResponse} from 'next/server';
+import {z} from 'zod';
+import {createRequestSupabase} from '@/lib/supabase-server';
+export async function GET(req:NextRequest){const organization=req.nextUrl.searchParams.get('organization'),cursor=req.nextUrl.searchParams.get('after');if(!z.string().uuid().safeParse(organization).success||cursor&&!z.string().uuid().safeParse(cursor).success)return NextResponse.json({error:'Elige un espacio.'},{status:400});const s=await createRequestSupabase(req);const{data,error}=await s.rpc('get_workspace_refundable_visits',{p_organization_id:organization,p_cursor:cursor});return NextResponse.json(error?{error:'Necesitas permiso financiero para consultar los pagos de visitas.'}:data,{status:error?403:200,headers:{'Cache-Control':'private, no-store'}});}

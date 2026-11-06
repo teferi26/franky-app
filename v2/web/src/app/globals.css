@@ -1,0 +1,791 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   FRANKY DESIGN SYSTEM v3 · "Editorial"
+   ---------------------------------------------------------------------
+   Principios (septiembre 2026):
+     1. Superficies blancas y neutras; el violeta es un ACENTO, no un velo.
+     2. Una sola familia de sombras en capas, suaves y frías.
+     3. Movimiento con intención: entradas al hacer scroll, hover con
+        elevación y foco de luz, transiciones de página. Todo respeta
+        `prefers-reduced-motion`.
+     4. Sin degradados de texto, sin blobs difuminados, sin "glass" por
+        defecto. `.gradient-text` y `.gradient-bg` se conservan como
+        NOMBRES por compatibilidad (los usan más de 100 ficheros) pero
+        ahora pintan colores sólidos de marca.
+   Los nombres de los tokens NO cambian: `bg-bg-primary`, `text-text-muted`,
+   `border-border`… siguen funcionando en todo el proyecto.
+   ===================================================================== */
+
+@theme {
+  /* Marca */
+  --color-violet: #6d3df0;
+  --color-violet-deep: #5b2fd8;
+  --color-violet-bright: #7c4dff;
+  --color-violet-light: #a78bfa;
+  --color-violet-50: #f4f1ff;
+  --color-violet-100: #ebe5ff;
+  --color-violet-200: #d9cfff;
+  --color-violet-300: #beadff;
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #6d3df0;
+  --color-violet-700: #5b2fd8;
+  --color-violet-800: #4a24b3;
+  --color-violet-900: #3b1d8f;
+
+  --color-fuchsia: #c026d3;
+  --color-orange: #de8927;
+  --color-orange-light: #f0a44e;
+  --color-orange-dark: #c47520;
+
+  /* Neutros (fríos, sin velo violeta) */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f6f5f9;
+  --color-bg-tertiary: #edebf2;
+  --color-bg-dark: #0d0c14;
+  --color-text-primary: #121019;
+  --color-text-secondary: #3f3b4f;
+  --color-text-muted: #706b80;
+  --color-border: #e6e4ec;
+  --color-border-light: #efedf3;
+
+  /* Estado */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #e11d48;
+  --color-info: #2563eb;
+
+  /* Tipografía */
+  --font-heading: "Outfit", "Sora", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  /* Sombras en capas (Editorial) */
+  --shadow-card: 0 1px 2px rgba(18, 16, 25, 0.04), 0 1px 3px rgba(18, 16, 25, 0.03);
+  --shadow-card-hover: 0 14px 34px -14px rgba(18, 16, 25, 0.22), 0 3px 8px -2px rgba(18, 16, 25, 0.06);
+  --shadow-float: 0 24px 60px -24px rgba(18, 16, 25, 0.3), 0 8px 20px -8px rgba(18, 16, 25, 0.08);
+  --shadow-glow: 0 8px 28px -8px rgba(109, 61, 240, 0.45);
+  --shadow-ring: 0 0 0 1px rgba(18, 16, 25, 0.06);
+
+  /* Radios */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Movimiento */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* La variante `dark:` de Tailwind mira solo `prefers-color-scheme`. Aqui el
+   tema tambien puede venir de `data-theme` (lo escribe ThemeToggle), asi que se
+   redefine para cubrir los dos disparadores, con las mismas reglas de
+   precedencia que los bloques de tokens de abajo: `data-theme` manda. */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) { @slot; }
+  }
+  &:where(:root[data-theme="dark"], :root[data-theme="dark"] *) { @slot; }
+}
+
+:root {
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-slow: 480ms;
+  --dur-reveal: 720ms;
+  /* Punto de luz que sigue al cursor en `.spotlight` (lo escribe SpotlightCard). */
+  --spot-x: 50%;
+  --spot-y: 50%;
+  --spot-color: rgba(109, 61, 240, 0.14);
+}
+
+/* ===== MODO OSCURO =====
+   Se implementa a nivel de TOKEN: se redefinen las variables del @theme y todas
+   las utilidades que las consumen cambian solas.
+   Dos disparadores: `prefers-color-scheme: dark` (sin JS, sin fogonazo) y
+   `data-theme` en <html> (elección explícita del usuario, ver ThemeToggle).
+   IMPORTANTE: los dos bloques van sincronizados. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg-primary: #0f0e16;
+    --color-bg-secondary: #16151f;
+    --color-bg-tertiary: #1e1c29;
+    --color-bg-dark: #07060b;
+
+    --color-text-primary: #f1eff7;
+    --color-text-secondary: #c6c2d4;
+    --color-text-muted: #8f8aa3;
+
+    --color-border: #27242f;
+    --color-border-light: #1f1d27;
+
+    --color-violet: #9d7dff;
+    --color-violet-deep: #8b66ff;
+    --color-violet-light: #c4b5fd;
+    --color-violet-50: #1b1730;
+    --color-violet-100: #221c3d;
+    --color-violet-200: #302759;
+    --color-fuchsia: #e879f9;
+    --color-orange: #e8a74e;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 12px -6px rgba(0, 0, 0, 0.6);
+    --shadow-card-hover: 0 16px 36px -14px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.4);
+    --shadow-float: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+    --shadow-ring: 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --spot-color: rgba(157, 125, 255, 0.16);
+  }
+
+  :root:not([data-theme="light"]) .bg-white {
+    background-color: var(--color-bg-secondary);
+  }
+  :root:not([data-theme="light"]) .bg-gray-50,
+  :root:not([data-theme="light"]) .bg-gray-100 {
+    background-color: var(--color-bg-tertiary);
+  }
+  :root:not([data-theme="light"]) .border-gray-100,
+  :root:not([data-theme="light"]) .border-gray-200 {
+    border-color: var(--color-border);
+  }
+  :root:not([data-theme="light"]) .text-gray-400,
+  :root:not([data-theme="light"]) .text-gray-500 {
+    color: var(--color-text-muted);
+  }
+  :root:not([data-theme="light"]) .text-gray-700,
+  :root:not([data-theme="light"]) .text-gray-800,
+  :root:not([data-theme="light"]) .text-gray-900,
+  :root:not([data-theme="light"]) .text-slate-900 {
+    color: var(--color-text-secondary);
+  }
+  :root:not([data-theme="light"]) .bg-white\/70,
+  :root:not([data-theme="light"]) .bg-white\/80,
+  :root:not([data-theme="light"]) .bg-white\/60,
+  :root:not([data-theme="light"]) .bg-white\/95,
+  :root:not([data-theme="light"]) .bg-white\/90 {
+    background-color: color-mix(in srgb, var(--color-bg-secondary) 85%, transparent);
+  }
+  :root:not([data-theme="light"]) .glass {
+    background: rgba(15, 14, 22, 0.72);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  :root:not([data-theme="light"]) img:not([src$=".svg"]) {
+    filter: brightness(0.92);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg-primary: #0f0e16;
+  --color-bg-secondary: #16151f;
+  --color-bg-tertiary: #1e1c29;
+  --color-bg-dark: #07060b;
+
+  --color-text-primary: #f1eff7;
+  --color-text-secondary: #c6c2d4;
+  --color-text-muted: #8f8aa3;
+
+  --color-border: #27242f;
+  --color-border-light: #1f1d27;
+
+  --color-violet: #9d7dff;
+  --color-violet-deep: #8b66ff;
+  --color-violet-light: #c4b5fd;
+  --color-violet-50: #1b1730;
+  --color-violet-100: #221c3d;
+  --color-violet-200: #302759;
+  --color-fuchsia: #e879f9;
+  --color-orange: #e8a74e;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 12px -6px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 16px 36px -14px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.4);
+  --shadow-float: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+  --shadow-ring: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --spot-color: rgba(157, 125, 255, 0.16);
+}
+
+/* Puente para las utilidades cableadas a blanco (más de 400 usos). */
+:root[data-theme="dark"] .bg-white {
+  background-color: var(--color-bg-secondary);
+}
+:root[data-theme="dark"] .bg-white\/70,
+:root[data-theme="dark"] .bg-white\/80,
+:root[data-theme="dark"] .bg-white\/60,
+:root[data-theme="dark"] .bg-white\/95,
+:root[data-theme="dark"] .bg-white\/90 {
+  background-color: color-mix(in srgb, var(--color-bg-secondary) 85%, transparent);
+}
+:root[data-theme="dark"] .glass {
+  background: rgba(15, 14, 22, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+:root[data-theme="dark"] .bg-gray-50 { background-color: var(--color-bg-tertiary); }
+:root[data-theme="dark"] .bg-gray-100 { background-color: var(--color-bg-tertiary); }
+:root[data-theme="dark"] .border-gray-100 { border-color: var(--color-border); }
+:root[data-theme="dark"] .border-gray-200 { border-color: var(--color-border); }
+:root[data-theme="dark"] .text-gray-400,
+:root[data-theme="dark"] .text-gray-500 { color: var(--color-text-muted); }
+:root[data-theme="dark"] .text-gray-700,
+:root[data-theme="dark"] .text-gray-800,
+:root[data-theme="dark"] .text-gray-900,
+:root[data-theme="dark"] .text-slate-900 { color: var(--color-text-secondary); }
+:root[data-theme="dark"] img:not([src$=".svg"]) {
+  filter: brightness(0.92);
+}
+
+/* ===== BASE ===== */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
+    overscroll-behavior-y: none;
+    font-feature-settings: "cv11", "ss01", "calt";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-violet-200);
+    color: var(--color-violet-900);
+  }
+
+  :where(a, button, [role="button"], [role="tab"], input, select, textarea, summary):focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  .prose-comfy {
+    max-width: 68ch;
+  }
+
+  /* Los iconos de lucide se dibujan con un trazo ligeramente más fino: es lo
+     que separa un producto de una plantilla. */
+  svg.lucide {
+    stroke-width: 1.75;
+  }
+}
+
+/* ===== UTILIDADES ===== */
+@layer utilities {
+  /* --- Superficies --- */
+  .glass {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+    border: 1px solid rgba(18, 16, 25, 0.06);
+  }
+
+  .glass-dark {
+    background: rgba(13, 12, 20, 0.72);
+    backdrop-filter: saturate(140%) blur(14px);
+    -webkit-backdrop-filter: saturate(140%) blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Antes: degradado violeta→fucsia en texto. Ahora: acento sólido. */
+  .gradient-text {
+    color: var(--color-violet);
+  }
+
+  /* Antes: degradado de tres colores. Ahora: violeta sólido con un brillo
+     superior casi imperceptible, que es lo que da profundidad sin gritar. */
+  .gradient-bg {
+    background-color: var(--color-violet);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 60%);
+  }
+
+  .gradient-mesh {
+    background:
+      radial-gradient(ellipse at 20% 40%, rgba(109, 61, 240, 0.07) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 20%, rgba(192, 38, 211, 0.04) 0%, transparent 55%);
+  }
+
+  /* Retícula fina de fondo, muy sutil, para heros y secciones vacías. */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-border) 70%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-border) 70%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(color-mix(in srgb, var(--color-border) 90%, transparent) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Borde hairline real (0.5px en pantallas densas). */
+  .hairline {
+    box-shadow: var(--shadow-ring);
+  }
+
+  /* --- Hover --- */
+  .hover-lift {
+    transition:
+      transform var(--dur-base) var(--ease-out-quart),
+      box-shadow var(--dur-base) var(--ease-out-quart),
+      border-color var(--dur-base) var(--ease-out-quart);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .hover-scale {
+    transition: transform var(--dur-base) var(--ease-out-quart);
+  }
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  /* Subrayado que crece desde la izquierda. */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size var(--dur-base) var(--ease-out-quart);
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  /* Flecha que se desplaza al pasar por encima del grupo. */
+  .group:hover .arrow-nudge,
+  .group:focus-visible .arrow-nudge {
+    transform: translateX(3px);
+  }
+  .arrow-nudge {
+    transition: transform var(--dur-base) var(--ease-out-quart);
+  }
+
+  /* Foco de luz que sigue al cursor (ver components/motion/SpotlightCard). */
+  .spotlight {
+    position: relative;
+    overflow: hidden;
+  }
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(420px circle at var(--spot-x) var(--spot-y), var(--spot-color), transparent 55%);
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out-quart);
+  }
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+
+  /* Destello que recorre un botón al pasar el ratón. */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+    transform: skewX(-20deg);
+    transition: left 0s;
+  }
+  .btn-shine:hover::after {
+    left: 160%;
+    transition: left 700ms var(--ease-out-quart);
+  }
+
+  /* Imagen que hace un zoom lento dentro de su marco. */
+  .img-zoom {
+    overflow: hidden;
+  }
+  .img-zoom img {
+    transition: transform 900ms var(--ease-out-quart);
+  }
+  .img-zoom:hover img {
+    transform: scale(1.04);
+  }
+
+  /* --- Tipografía fluida --- */
+  .text-fluid-display {
+    font-size: clamp(2.5rem, 1.4rem + 4.2vw, 5.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+  }
+  .text-fluid-h1 {
+    font-size: clamp(1.9rem, 1.2rem + 2.4vw, 3.25rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+  .text-fluid-h2 {
+    font-size: clamp(1.5rem, 1.05rem + 1.6vw, 2.5rem);
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+  }
+  .text-fluid-lead {
+    font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.3125rem);
+    line-height: 1.55;
+  }
+  /* Rótulo pequeño en mayúsculas para abrir secciones ("La comunidad"). */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Entradas --- */
+  .animate-fade-in {
+    animation: fadeIn var(--dur-slow) var(--ease-out-expo) both;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.7s var(--ease-out-expo) both;
+  }
+  .animate-list-in {
+    animation: listIn 0.55s var(--ease-out-expo) both;
+    animation-delay: calc(min(var(--i, 0), 12) * 50ms);
+  }
+  .animate-heart-pop {
+    animation: heartPop 0.35s var(--ease-out-expo);
+  }
+  .animate-float {
+    animation: float 7s ease-in-out infinite;
+  }
+  .animate-float-slow {
+    animation: float 11s ease-in-out infinite;
+  }
+  .animate-marquee {
+    animation: marquee var(--marquee-duration, 40s) linear infinite;
+  }
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
+  .animate-page-in {
+    animation: pageIn 0.42s var(--ease-out-expo) both;
+  }
+  .animate-scale-in {
+    animation: scaleIn 0.28s var(--ease-out-expo) both;
+  }
+  .animate-dropdown {
+    transform-origin: top;
+    animation: dropdownIn 0.22s var(--ease-out-expo) both;
+  }
+  /* Diálogo centrado: el keyframe incluye el translate para no descentrarlo. */
+  .animate-dialog-in {
+    animation: dialogIn 0.26s var(--ease-out-expo) both;
+  }
+  .animate-sheet-in {
+    animation: sheetIn 0.36s var(--ease-out-expo) both;
+  }
+
+  /* --- Reveal al hacer scroll (components/motion/Reveal) ---
+     Estado inicial invisible; `.is-inview` dispara la transición. Cada hijo
+     con `--i` se retrasa en cascada. Se anula entero con reduced-motion. */
+  [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+    transition:
+      opacity var(--dur-reveal) var(--ease-out-expo),
+      transform var(--dur-reveal) var(--ease-out-expo),
+      filter var(--dur-reveal) var(--ease-out-expo);
+    transition-delay: calc(min(var(--i, 0), 14) * 70ms + var(--reveal-delay, 0ms));
+    will-change: opacity, transform;
+  }
+  [data-reveal="fade"] {
+    transform: none;
+  }
+  [data-reveal="scale"] {
+    transform: scale(0.96);
+  }
+  [data-reveal="left"] {
+    transform: translate3d(-24px, 0, 0);
+  }
+  [data-reveal="right"] {
+    transform: translate3d(24px, 0, 0);
+  }
+  [data-reveal="blur"] {
+    filter: blur(8px);
+    transform: translate3d(0, 12px, 0);
+  }
+  [data-reveal].is-inview,
+  .is-inview > [data-reveal] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  /* Sin JS (o antes de hidratar más de 1,5 s), el contenido tiene que verse. */
+  html.no-reveal [data-reveal] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
+  /* --- Animación ligada al scroll (progresiva: si el navegador no la
+     soporta, no pasa nada) --- */
+  @supports (animation-timeline: view()) {
+    .parallax-slow {
+      animation: parallaxSlow linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+    .fade-on-scroll {
+      animation: fadeOnScroll linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 60%;
+    }
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .transition-quick {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out-quart);
+  }
+
+  /* Esqueleto con brillo que recorre el bloque (mejor que el parpadeo). */
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-bg-tertiary);
+  }
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-bg-primary) 60%, transparent), transparent);
+    animation: shimmerSlide 1.6s var(--ease-in-out) infinite;
+  }
+}
+
+/* ===== MOVIMIENTO REDUCIDO ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-float,
+  .animate-float-slow,
+  .animate-pulse-ring,
+  .animate-shimmer,
+  .animate-heartbeat,
+  .animate-marquee,
+  .parallax-slow,
+  .fade-on-scroll {
+    animation: none !important;
+  }
+
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-step-in,
+  .animate-pop-in,
+  .animate-list-in,
+  .animate-heart-pop,
+  .animate-page-in,
+  .animate-scale-in,
+  .animate-dropdown,
+  .animate-dialog-in,
+  .animate-sheet-in,
+  [data-reveal] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* ===== KEYFRAMES ===== */
+@keyframes listIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  70% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes dialogIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes parallaxSlow {
+  from { transform: translateY(6%); }
+  to { transform: translateY(-6%); }
+}
+@keyframes fadeOnScroll {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes shimmerSlide {
+  to { transform: translateX(100%); }
+}
+
+/* ===== BARRA DE PESTAÑAS MÓVIL ===== */
+@media (max-width: 1023px) {
+  body:has(.franky-tabbar) #main-content {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+  body:has(.franky-tabbar) {
+    --tabbar-offset: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ===== ONBOARDING / REGISTRO (asistente paso a paso) ===== */
+.animate-step-in {
+  animation: stepIn 0.45s var(--ease-out-expo) both;
+}
+.animate-pop-in {
+  animation: popIn 0.35s var(--ease-out-expo) both;
+}
+.animate-pulse-ring {
+  animation: pulseRing 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.animate-shimmer {
+  animation: shimmer 2.2s linear infinite;
+  background-size: 200% 100%;
+}
+.animate-heartbeat {
+  animation: heartbeat 1.6s ease-in-out infinite;
+}
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes pulseRing {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.12); }
+  40% { transform: scale(1); }
+  55% { transform: scale(1.08); }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-text-muted) 35%, transparent);
+  border-radius: var(--radius-full);
+  border: 3px solid var(--color-bg-primary);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--color-text-muted) 60%, transparent);
+}
+
+/* ===== Franky Pro (app de negocios) =====
+   Solo lo que el kit de Pro necesita y no existe ya: el panel lateral que
+   entra desde la derecha en escritorio y desde abajo en el móvil, y la línea
+   de "ahora" de las agendas. */
+@keyframes proDrawerIn {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes proSheetUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes proPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@layer utilities {
+  .pro-drawer-in { animation: proSheetUp 0.34s var(--ease-out-expo) both; }
+  @media (min-width: 768px) {
+    .pro-drawer-in { animation-name: proDrawerIn; }
+  }
+  .pro-live { animation: proPulse 2.4s ease-in-out infinite; }
+  .pro-scroll { scrollbar-width: thin; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pro-drawer-in, .pro-live { animation: none !important; opacity: 1 !important; transform: none !important; }
+}

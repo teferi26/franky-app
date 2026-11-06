@@ -1,0 +1,185 @@
+name: Android beta APK on GitHub
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: 'Reviewed local APK version code; not a Google Play availability check'
+        required: true
+        default: '19'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: franky-android-beta-apk
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/workspaces-2-4-0')
+    name: Signed test APK (no Play submission)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+        working-directory: v2/mobile
+    env:
+      CI: '1'
+      EAS_NO_VCS: '1'
+      EXPO_NO_TELEMETRY: '1'
+      VERSION_CODE: ${{ inputs.version_code }}
+      BUILD_PROFILE: 'beta-demo-apk'
+      BETA_REGISTRY_SHA256: 'c339cece091282baedefd40b8f79440790c340db1c9f44444f802ba2d30516ed'
+      EXPECTED_SIGNER_SHA256: '947c145284fee3cca87f31a1b657cc86386d612f5d49a0d16f8d5854947ee7ae'
+      EXPO_PUBLIC_NATIVE_BILLING_ENABLED: 'false'
+      # EAS Secret file variables are unavailable to local builds. This APK is
+      # for core demo flows; remote push is deliberately outside its evidence.
+      GOOGLE_SERVICES_JSON: ''
+
+    steps:
+      - name: Check out the reviewed branch and shared modules
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            v2/mobile
+            v2/shared
+            v2/docs/workspaces
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+
+      - name: Set up Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Validate the reserved APK configuration
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const app = JSON.parse(fs.readFileSync('app.json', 'utf8')).expo;
+          const eas = JSON.parse(fs.readFileSync('eas.json', 'utf8'));
+          const bytes = fs.readFileSync('../docs/workspaces/version-registry.json');
+          if (crypto.createHash('sha256').update(bytes).digest('hex') !== process.env.BETA_REGISTRY_SHA256) {
+            throw new Error('Version reservation changed; review this workflow before compiling');
+          }
+          const registry = JSON.parse(bytes);
+          const beta = registry.preparedBeta;
+          const number = process.env.VERSION_CODE;
+          if (!/^[1-9][0-9]{0,7}$/.test(number || '') ||
+              Number(number) !== beta.androidVersionCode || Number(number) !== app.android?.versionCode ||
+              beta.version !== app.version || beta.iosBuildNumber !== app.ios?.buildNumber ||
+              registry.application !== 'es.franky.app' || app.android?.package !== registry.application ||
+              app.extra?.eas?.projectId !== '7582e6cd-b708-44b6-bc26-fd118e0046aa' ||
+              beta.easBuildProfile !== 'beta-demo' || beta.autoIncrement !== false ||
+              beta.environment !== 'production' || beta.globalWorkspaceAndGrowthFlags !== 'remain_disabled' ||
+              beta.nativeDigitalSalesEnabled !== false || beta.androidNumberCheckedAgainstPlay !== false ||
+              beta.state !== 'local_configuration_only' || beta.signedBuildStarted !== false || beta.submitted !== false) {
+            throw new Error('APK does not match the reviewed local reservation; Google Play code availability is unverified');
+          }
+          const profile = eas.build['beta-demo-apk'];
+          const parent = eas.build['beta-demo'];
+          const profileKeys = ['extends', 'distribution', 'autoIncrement', 'credentialsSource', 'android'];
+          if (process.env.BUILD_PROFILE !== 'beta-demo-apk' || eas.cli.appVersionSource !== 'local' ||
+              Object.keys(profile ?? {}).some(key => !profileKeys.includes(key)) ||
+              Object.keys(profile?.android ?? {}).some(key => key !== 'buildType') ||
+              parent?.android || eas.build.production.android ||
+              profile?.extends !== 'beta-demo' || profile.distribution !== 'internal' ||
+              profile.autoIncrement !== false || profile.credentialsSource !== 'remote' ||
+              profile.android?.buildType !== 'apk' || profile.android?.gradleCommand || profile.developmentClient ||
+              parent?.extends !== 'production' || parent.autoIncrement !== false || parent.distribution !== 'store' ||
+              parent.env?.EXPO_PUBLIC_NATIVE_BILLING_ENABLED !== 'false' ||
+              (profile.env?.EXPO_PUBLIC_NATIVE_BILLING_ENABLED ?? 'false') !== 'false' ||
+              process.env.EXPO_PUBLIC_NATIVE_BILLING_ENABLED !== 'false' ||
+              eas.build.production.environment !== 'production' ||
+              (profile.environment ?? 'production') !== 'production' ||
+              (parent.environment ?? 'production') !== 'production' ||
+              app.android.googleServicesFile || process.env.GOOGLE_SERVICES_JSON) {
+            throw new Error('Use the internal APK profile, existing remote signing and disabled digital sales; Firebase is not part of this APK evidence');
+          }
+          console.log(`Validated test APK ${app.version} (${number}); not verified for Play submission.`);
+          NODE
+
+      - name: Check signing access and Android toolchain
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$EXPO_TOKEN" ]]; then
+            echo '::error::Missing repository secret EXPO_TOKEN. No build was started.'
+            exit 1
+          fi
+          sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          [[ -x "$sdkmanager" ]]
+          "$sdkmanager" --licenses < <(yes) > /dev/null
+          "$sdkmanager" 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
+          java -version
+          printf 'ANDROID_NDK_HOME=%s/ndk/27.1.12297006\nANDROID_NDK_ROOT=%s/ndk/27.1.12297006\nANDROID_NDK=%s/ndk/27.1.12297006\n' "$ANDROID_HOME" "$ANDROID_HOME" "$ANDROID_HOME" >> "$GITHUB_ENV"
+          printf 'EAS_LOCAL_BUILD_WORKINGDIR=%s/franky-android-build\nEAS_LOCAL_BUILD_ARTIFACTS_DIR=%s/franky-android-artifacts\n' "$RUNNER_TEMP" "$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - name: Install locked dependencies and check types
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npm install --global eas-cli@24.0.0 --no-audit --no-fund
+
+      - name: Compile and sign the local APK
+        timeout-minutes: 70
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$EAS_LOCAL_BUILD_ARTIFACTS_DIR"
+          unset GOOGLE_SERVICES_JSON
+          eas build --platform android --profile beta-demo-apk --local --non-interactive --freeze-credentials --output "$EAS_LOCAL_BUILD_ARTIFACTS_DIR/franky-demo.apk"
+
+      - name: Verify APK identity, version and existing signature
+        run: |
+          set -euo pipefail
+          apk="$EAS_LOCAL_BUILD_ARTIFACTS_DIR/franky-demo.apk"
+          analyzer="$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer"
+          signer="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          [[ -s "$apk" && -x "$analyzer" && -x "$signer" ]]
+          [[ "$("$analyzer" manifest application-id "$apk")" == 'es.franky.app' ]]
+          [[ "$("$analyzer" manifest version-code "$apk")" == "$VERSION_CODE" ]]
+          [[ "$("$analyzer" manifest version-name "$apk")" == "$(node -p "require('./app.json').expo.version")" ]]
+          [[ "$("$analyzer" manifest debuggable "$apk")" == 'false' ]]
+          "$signer" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/franky-apk-signature.txt"
+          node <<'SIGNATURE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const text = fs.readFileSync(path.join(process.env.RUNNER_TEMP, 'franky-apk-signature.txt'), 'utf8');
+          const signers = [...text.matchAll(/^Signer #\d+ certificate SHA-256 digest: ([a-f0-9]+)\s*$/gmi)].map(row => row[1].toLowerCase());
+          if (signers.length !== 1 || signers[0] !== process.env.EXPECTED_SIGNER_SHA256) throw new Error('APK is not signed by the reviewed existing EAS certificate');
+          SIGNATURE
+          cd "$EAS_LOCAL_BUILD_ARTIFACTS_DIR"
+          sha256sum franky-demo.apk > franky-demo.apk.sha256
+          printf 'Source: %s\nPackage: es.franky.app\nVersion code: %s\nProfile: beta-demo-apk\nSignature: verified against existing EAS certificate\nGoogle Play availability: NOT VERIFIED\nRemote push: NOT INCLUDED IN THIS VALIDATION\nDigital sales: OFF\n' "$GITHUB_SHA" "$VERSION_CODE" > build.txt
+          printf 'Test APK only. No Google Play upload or submission occurred.\nUse server-registered demo accounts after the matching database/API release.\nThis artifact does not activate professional access for real accounts.\nRemote push and store purchases need separate validation.\nThe package is es.franky.app: it cannot be installed alongside another Franky package with the same identifier; Play signing may differ.\n' > READ-ME.txt
+
+      - name: Save only the signed test artifact and checksum
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: franky-android-demo-${{ inputs.version_code }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/franky-android-artifacts/franky-demo.apk
+            ${{ runner.temp }}/franky-android-artifacts/franky-demo.apk.sha256
+            ${{ runner.temp }}/franky-android-artifacts/build.txt
+            ${{ runner.temp }}/franky-android-artifacts/READ-ME.txt
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Record the remaining checks
+        run: |
+          printf 'Test APK %s is attached for 7 days. No Play edit, upload or submission occurred. Android code availability in Play, Firebase push, external payments and physical-device checks remain unverified.\n' "$VERSION_CODE" >> "$GITHUB_STEP_SUMMARY"

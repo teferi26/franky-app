@@ -1,0 +1,658 @@
+{
+  "space": {
+    "menu": [],
+    "offers": [],
+    "profile": {
+      "hours": [],
+      "address": null,
+      "vertical": "hairdresser",
+      "published": false,
+      "created_at": "2026-09-24T19:42:39.757+01:00",
+      "updated_at": "2026-09-24T19:42:39.757+01:00",
+      "description": "Agenda de la prueba local",
+      "public_slug": "agenda-local-pruebas",
+      "card_enabled": false,
+      "booking_enabled": false,
+      "leisure_spot_id": null,
+      "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+      "card_discount_pct": 5,
+      "campus_university_id": null,
+      "walk_minutes_to_campus": null
+    },
+    "reviews": [],
+    "promoters": [],
+    "daily_menu": null,
+    "organization": {
+      "id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+      "city": "Madrid",
+      "demo": false,
+      "kind": "leisure",
+      "name": "Agenda local"
+    },
+    "group_requests": []
+  },
+  "workspace": {
+    "demo": false,
+    "bundles": [],
+    "pricing": {
+      "currency": "EUR",
+      "annual_cents": 29000,
+      "tax_included": false,
+      "founder_cents": 19900,
+      "monthly_cents": 2900,
+      "sales_enabled": false
+    },
+    "bookings": [
+      {
+        "id": "e4058ffa-9fc1-4a09-9666-389932cd5871",
+        "note": "Cita manual",
+        "phase": null,
+        "trial": false,
+        "source": "phone",
+        "status": "attended",
+        "ends_at": "2026-09-24T20:10:39.961+01:00",
+        "timezone": "Europe/Madrid",
+        "bundle_id": null,
+        "starts_at": "2026-09-24T19:40:39.961+01:00",
+        "created_at": "2026-09-24T19:42:39.866+01:00",
+        "party_size": 1,
+        "reschedule": null,
+        "service_id": "6b3fcffa-da6b-4ec2-912e-d680fbeb5bff",
+        "session_id": null,
+        "updated_at": "2026-09-24T19:42:39.974+01:00",
+        "attended_at": "2026-09-24T19:42:39.974+01:00",
+        "attended_by": "4b88390e-2733-4512-9d4f-76c9b18fd024",
+        "customer_id": "ddcacb17-6a9b-4fee-b964-8a9e8daf0394",
+        "total_cents": 1500,
+        "resource_ids": [
+          "b245e1f9-c12d-4398-bc85-43b1dbc36ffb"
+        ],
+        "service_name": "Corte",
+        "blocked_until": "2026-09-24T20:20:39.961+01:00",
+        "card_quote_id": null,
+        "customer_name": "Cliente",
+        "deposit_cents": 0,
+        "deposit_status": "not_required",
+        "price_snapshot": {
+          "menu": "",
+          "terms": "",
+          "version": 4,
+          "unit_cents": 1500,
+          "price_basis": "booking",
+          "service_name": "Corte"
+        },
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "customer_user_id": null,
+        "lifecycle_version": 5,
+        "cancellation_hours": 24,
+        "waitlist_offer_status": "none",
+        "waitlist_offer_version": 0,
+        "waitlist_offer_expires_at": null
+      },
+      {
+        "id": "b0ca599b-4d20-45f7-ba03-ebeaf926f5f9",
+        "note": "",
+        "phase": null,
+        "trial": false,
+        "source": null,
+        "status": "confirmed",
+        "ends_at": "2026-09-26T14:12:39.831+01:00",
+        "timezone": "Europe/Madrid",
+        "bundle_id": null,
+        "starts_at": "2026-09-26T13:42:39.831+01:00",
+        "created_at": "2026-09-24T19:42:39.834+01:00",
+        "party_size": 1,
+        "reschedule": null,
+        "service_id": "6b3fcffa-da6b-4ec2-912e-d680fbeb5bff",
+        "session_id": null,
+        "updated_at": "2026-09-24T19:42:39.834+01:00",
+        "attended_at": null,
+        "attended_by": null,
+        "customer_id": "ddcacb17-6a9b-4fee-b964-8a9e8daf0394",
+        "total_cents": 1500,
+        "resource_ids": [
+          "b245e1f9-c12d-4398-bc85-43b1dbc36ffb"
+        ],
+        "service_name": "Corte",
+        "blocked_until": "2026-09-26T14:22:39.831+01:00",
+        "card_quote_id": null,
+        "customer_name": "Cliente",
+        "deposit_cents": 0,
+        "deposit_status": "not_required",
+        "price_snapshot": {
+          "menu": "",
+          "terms": "",
+          "version": 3,
+          "unit_cents": 1500,
+          "price_basis": "booking",
+          "service_name": "Corte"
+        },
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "customer_user_id": null,
+        "lifecycle_version": 1,
+        "cancellation_hours": 24,
+        "waitlist_offer_status": "none",
+        "waitlist_offer_version": 0,
+        "waitlist_offer_expires_at": null
+      },
+      {
+        "id": "abc83444-9ee7-43de-9800-5c50b5488786",
+        "note": "",
+        "phase": null,
+        "trial": false,
+        "source": null,
+        "status": "cancelled",
+        "ends_at": "2026-09-27T08:12:39.912+01:00",
+        "timezone": "Europe/Madrid",
+        "bundle_id": null,
+        "starts_at": "2026-09-27T07:42:39.912+01:00",
+        "created_at": "2026-09-24T19:42:39.905+01:00",
+        "party_size": 1,
+        "reschedule": null,
+        "service_id": "6b3fcffa-da6b-4ec2-912e-d680fbeb5bff",
+        "session_id": null,
+        "updated_at": "2026-09-24T19:42:40.032+01:00",
+        "attended_at": null,
+        "attended_by": null,
+        "customer_id": "35e4fabb-9c33-4987-9cbd-71074fd67736",
+        "total_cents": 1500,
+        "resource_ids": [
+          "b245e1f9-c12d-4398-bc85-43b1dbc36ffb"
+        ],
+        "service_name": "Corte",
+        "blocked_until": "2026-09-27T08:22:39.912+01:00",
+        "card_quote_id": null,
+        "customer_name": "Cuenta eliminada",
+        "deposit_cents": 0,
+        "deposit_status": "not_required",
+        "price_snapshot": {
+          "menu": "",
+          "terms": "",
+          "version": 6,
+          "unit_cents": 1500,
+          "price_basis": "booking",
+          "service_name": "Corte"
+        },
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "customer_user_id": null,
+        "lifecycle_version": 4,
+        "cancellation_hours": 24,
+        "waitlist_offer_status": "none",
+        "waitlist_offer_version": 0,
+        "waitlist_offer_expires_at": null
+      },
+      {
+        "id": "f2f289e0-bd89-433f-a918-3adce43aad1e",
+        "note": "Cita manual",
+        "phase": null,
+        "trial": false,
+        "source": "phone",
+        "status": "confirmed",
+        "ends_at": "2026-09-27T18:12:40.006+01:00",
+        "timezone": "Europe/Madrid",
+        "bundle_id": null,
+        "starts_at": "2026-09-27T17:42:40.006+01:00",
+        "created_at": "2026-09-24T19:42:40.007+01:00",
+        "party_size": 1,
+        "reschedule": null,
+        "service_id": "6b3fcffa-da6b-4ec2-912e-d680fbeb5bff",
+        "session_id": null,
+        "updated_at": "2026-09-24T19:42:40.007+01:00",
+        "attended_at": null,
+        "attended_by": null,
+        "customer_id": "ddcacb17-6a9b-4fee-b964-8a9e8daf0394",
+        "total_cents": 1500,
+        "resource_ids": [
+          "b245e1f9-c12d-4398-bc85-43b1dbc36ffb"
+        ],
+        "service_name": "Corte",
+        "blocked_until": "2026-09-27T18:22:40.006+01:00",
+        "card_quote_id": null,
+        "customer_name": "Cliente",
+        "deposit_cents": 500,
+        "deposit_status": "refunded",
+        "price_snapshot": {
+          "menu": "",
+          "terms": "",
+          "version": 6,
+          "unit_cents": 1500,
+          "price_basis": "booking",
+          "service_name": "Corte"
+        },
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "customer_user_id": null,
+        "lifecycle_version": 1,
+        "cancellation_hours": 24,
+        "waitlist_offer_status": "none",
+        "waitlist_offer_version": 0,
+        "waitlist_offer_expires_at": null
+      },
+      {
+        "id": "5b228ef7-0893-435b-bc16-6499c27f4ee9",
+        "note": "",
+        "phase": null,
+        "trial": false,
+        "source": null,
+        "status": "confirmed",
+        "ends_at": "2026-09-28T00:12:39.949+01:00",
+        "timezone": "Europe/Madrid",
+        "bundle_id": null,
+        "starts_at": "2026-09-27T23:42:39.949+01:00",
+        "created_at": "2026-09-24T19:42:39.949+01:00",
+        "party_size": 1,
+        "reschedule": null,
+        "service_id": "6b3fcffa-da6b-4ec2-912e-d680fbeb5bff",
+        "session_id": null,
+        "updated_at": "2026-09-24T19:42:39.949+01:00",
+        "attended_at": null,
+        "attended_by": null,
+        "customer_id": "ddcacb17-6a9b-4fee-b964-8a9e8daf0394",
+        "total_cents": 1500,
+        "resource_ids": [
+          "b245e1f9-c12d-4398-bc85-43b1dbc36ffb"
+        ],
+        "service_name": "Corte",
+        "blocked_until": "2026-09-28T00:22:39.949+01:00",
+        "card_quote_id": null,
+        "customer_name": "Cliente",
+        "deposit_cents": 0,
+        "deposit_status": "not_required",
+        "price_snapshot": {
+          "menu": "",
+          "terms": "",
+          "version": 6,
+          "unit_cents": 1500,
+          "price_basis": "booking",
+          "service_name": "Corte"
+        },
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "customer_user_id": null,
+        "lifecycle_version": 1,
+        "cancellation_hours": 24,
+        "waitlist_offer_status": "none",
+        "waitlist_offer_version": 0,
+        "waitlist_offer_expires_at": null
+      }
+    ],
+    "has_more": false,
+    "services": [
+      {
+        "id": "6b3fcffa-da6b-4ec2-912e-d680fbeb5bff",
+        "menu": "",
+        "mode": "appointment",
+        "name": "Corte",
+        "active": true,
+        "online": true,
+        "version": 6,
+        "capacity": 1,
+        "category": "Otra categoría",
+        "description": "",
+        "price_basis": "booking",
+        "price_cents": 1500,
+        "deposit_cents": 0,
+        "buffer_minutes": 10,
+        "staff_required": true,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "duration_minutes": 30,
+        "eligible_staff_ids": [
+          "b245e1f9-c12d-4398-bc85-43b1dbc36ffb"
+        ],
+        "required_resource_ids": []
+      }
+    ],
+    "sessions": [],
+    "settings": {
+      "demo": false,
+      "terms": "",
+      "enabled": true,
+      "category": "hairdresser",
+      "timezone": "Europe/Madrid",
+      "updated_at": "2026-09-24T19:42:39.78+01:00",
+      "staff_limit": 3,
+      "sales_enabled": false,
+      "service_limit": 50,
+      "public_booking": true,
+      "resource_limit": 20,
+      "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+      "require_approval": false,
+      "cancellation_hours": 24,
+      "operational_paused": false,
+      "booking_horizon_days": 90
+    },
+    "customers": [
+      {
+        "id": "ddcacb17-6a9b-4fee-b964-8a9e8daf0394",
+        "contact": "600123456",
+        "user_id": null,
+        "created_at": "2026-09-24T19:42:39.809+01:00",
+        "display_name": "Cliente",
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "35e4fabb-9c33-4987-9cbd-71074fd67736",
+        "contact": null,
+        "user_id": "b58586ff-0c79-455a-b913-19ec40cef526",
+        "created_at": "2026-09-24T19:42:39.905+01:00",
+        "display_name": "Cuenta eliminada",
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "654695d6-0420-4208-afcf-7f9358c49691",
+        "contact": null,
+        "user_id": null,
+        "created_at": "2026-09-24T19:42:39.996+01:00",
+        "display_name": "Segundo",
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      }
+    ],
+    "resources": [
+      {
+        "id": "b245e1f9-c12d-4398-bc85-43b1dbc36ffb",
+        "kind": "staff",
+        "name": "Ana",
+        "active": true,
+        "capacity": 1,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "c860f82f-0e32-49ad-b985-6225b2238306",
+        "kind": "staff",
+        "name": "Bea",
+        "active": true,
+        "capacity": 1,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      }
+    ],
+    "exceptions": [],
+    "permissions": [
+      "resource.read",
+      "content.manage",
+      "members.read",
+      "members.manage",
+      "finance.read",
+      "finance.manage",
+      "moderation.manage",
+      "analytics.read",
+      "attendees.manage",
+      "settings.manage"
+    ],
+    "availability": [
+      {
+        "id": "4f6ce68f-8966-4550-b2e4-964286a5d7a2",
+        "weekday": 0,
+        "end_minute": 1440,
+        "resource_id": null,
+        "start_minute": 0,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "5f9ac3aa-56a8-47a4-a668-a9948bf8bc17",
+        "weekday": 1,
+        "end_minute": 1440,
+        "resource_id": null,
+        "start_minute": 0,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "5d4307a3-94fe-4606-aa1b-03f9a19d326f",
+        "weekday": 2,
+        "end_minute": 1440,
+        "resource_id": null,
+        "start_minute": 0,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "990325ea-908a-4f74-b129-e314d250bb48",
+        "weekday": 3,
+        "end_minute": 1440,
+        "resource_id": null,
+        "start_minute": 0,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "79561a17-86f6-4894-88dc-dc130e0ec2cc",
+        "weekday": 4,
+        "end_minute": 1440,
+        "resource_id": null,
+        "start_minute": 0,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "d03b3a63-ef48-4037-9a32-3663ede59b1d",
+        "weekday": 5,
+        "end_minute": 1440,
+        "resource_id": null,
+        "start_minute": 0,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "eeb0e279-8e66-4ee2-99e0-ccc6ca23a1a7",
+        "weekday": 6,
+        "end_minute": 1440,
+        "resource_id": null,
+        "start_minute": 0,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      }
+    ]
+  },
+  "operations": {
+    "limits": {
+      "offers_truncated": false,
+      "reviews_truncated": false,
+      "group_requests_truncated": false
+    },
+    "bookings": [
+      {
+        "id": "e4058ffa-9fc1-4a09-9666-389932cd5871",
+        "note": "Cita manual",
+        "phase": null,
+        "trial": false,
+        "source": "phone",
+        "paid_cents": 1500
+      },
+      {
+        "id": "b0ca599b-4d20-45f7-ba03-ebeaf926f5f9",
+        "note": "",
+        "phase": null,
+        "trial": false,
+        "source": null,
+        "paid_cents": 0
+      },
+      {
+        "id": "abc83444-9ee7-43de-9800-5c50b5488786",
+        "note": "",
+        "phase": null,
+        "trial": false,
+        "source": null,
+        "paid_cents": 0
+      },
+      {
+        "id": "f2f289e0-bd89-433f-a918-3adce43aad1e",
+        "note": "Cita manual",
+        "phase": null,
+        "trial": false,
+        "source": "phone",
+        "paid_cents": 1000
+      },
+      {
+        "id": "5b228ef7-0893-435b-bc16-6499c27f4ee9",
+        "note": "",
+        "phase": null,
+        "trial": false,
+        "source": null,
+        "paid_cents": 0
+      }
+    ],
+    "payments": [
+      {
+        "id": "78450f24-dfb5-47d5-b72f-e0929c72ec44",
+        "method": "cash",
+        "tip_cents": 100,
+        "booking_id": "e4058ffa-9fc1-4a09-9666-389932cd5871",
+        "recorded_at": "2026-09-24T19:42:39.969+01:00",
+        "amount_cents": 500,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "c27a8af1-e204-44b1-aea6-d25778b96daf",
+        "method": "bizum",
+        "tip_cents": 0,
+        "booking_id": "e4058ffa-9fc1-4a09-9666-389932cd5871",
+        "recorded_at": "2026-09-24T19:42:39.974+01:00",
+        "amount_cents": 1000,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      },
+      {
+        "id": "f12da326-2dcb-4a35-a8ed-e0896cf8193a",
+        "method": "cash",
+        "tip_cents": 0,
+        "booking_id": "f2f289e0-bd89-433f-a918-3adce43aad1e",
+        "recorded_at": "2026-09-24T19:42:40.016+01:00",
+        "amount_cents": 1000,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e"
+      }
+    ],
+    "services": [
+      {
+        "id": "6b3fcffa-da6b-4ec2-912e-d680fbeb5bff",
+        "menu": "",
+        "mode": "appointment",
+        "name": "Corte",
+        "active": true,
+        "online": true,
+        "version": 6,
+        "capacity": 1,
+        "category": "Otra categoría",
+        "description": "",
+        "price_basis": "booking",
+        "price_cents": 1500,
+        "deposit_cents": 0,
+        "buffer_minutes": 10,
+        "staff_required": true,
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "duration_minutes": 30,
+        "eligible_staff_ids": [
+          "b245e1f9-c12d-4398-bc85-43b1dbc36ffb"
+        ],
+        "required_resource_ids": []
+      }
+    ],
+    "sessions": [],
+    "customers": [
+      {
+        "id": "35e4fabb-9c33-4987-9cbd-71074fd67736",
+        "tags": [],
+        "notes": "",
+        "visits": 0,
+        "contact": null,
+        "user_id": "b58586ff-0c79-455a-b913-19ec40cef526",
+        "no_shows": 0,
+        "technical": "",
+        "created_at": "2026-09-24T19:42:39.905+01:00",
+        "last_visit": null,
+        "spent_cents": 0,
+        "display_name": "Cuenta eliminada",
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "marketing_consent": false,
+        "consent_recorded_at": null
+      },
+      {
+        "id": "654695d6-0420-4208-afcf-7f9358c49691",
+        "tags": [],
+        "notes": "",
+        "visits": 0,
+        "contact": null,
+        "user_id": null,
+        "no_shows": 0,
+        "technical": "",
+        "created_at": "2026-09-24T19:42:39.996+01:00",
+        "last_visit": null,
+        "spent_cents": 0,
+        "display_name": "Segundo",
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "marketing_consent": false,
+        "consent_recorded_at": null
+      },
+      {
+        "id": "ddcacb17-6a9b-4fee-b964-8a9e8daf0394",
+        "tags": [
+          "habitual"
+        ],
+        "notes": "Nota actualizada",
+        "visits": 1,
+        "contact": "600123456",
+        "user_id": null,
+        "no_shows": 0,
+        "technical": "Color",
+        "created_at": "2026-09-24T19:42:39.809+01:00",
+        "last_visit": "2026-09-24T19:40:39.961+01:00",
+        "spent_cents": 2500,
+        "display_name": "Cliente",
+        "organization_id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+        "marketing_consent": true,
+        "consent_recorded_at": "2026-09-24T19:42:39.809+01:00"
+      }
+    ],
+    "review_stats": {
+      "count": 0,
+      "rating": null
+    },
+    "can_record_payment": true,
+    "next_customer_cursor": null
+  },
+  "spaces": [
+    {
+      "id": "31d55e39-e6e7-45d7-83ad-eadafe79427e",
+      "city": "Madrid",
+      "kind": "leisure",
+      "name": "Agenda local",
+      "role": "owner",
+      "slug": "leisure-31d55e39e6e745d783adeadafe79427e",
+      "status": "active",
+      "subtype": "peluqueria",
+      "permissions": [
+        "resource.read",
+        "content.manage",
+        "members.read",
+        "members.manage",
+        "finance.read",
+        "finance.manage",
+        "moderation.manage",
+        "analytics.read",
+        "attendees.manage",
+        "settings.manage"
+      ],
+      "demo_cohort_id": null,
+      "verification_status": "unverified"
+    },
+    {
+      "id": "3760b310-9861-4dd9-9526-5d37c3469dba",
+      "city": "Madrid",
+      "kind": "leisure",
+      "name": "Otro local",
+      "role": "owner",
+      "slug": "leisure-3760b31098614dd995265d37c3469dba",
+      "status": "active",
+      "subtype": "peluqueria",
+      "permissions": [
+        "resource.read",
+        "content.manage",
+        "members.read",
+        "members.manage",
+        "finance.read",
+        "finance.manage",
+        "moderation.manage",
+        "analytics.read",
+        "attendees.manage",
+        "settings.manage"
+      ],
+      "demo_cohort_id": null,
+      "verification_status": "unverified"
+    }
+  ],
+  "shifts": [],
+  "range": {
+    "from": "2026-09-23T18:42:39.978Z",
+    "until": "2026-12-13T18:42:39.978Z"
+  }
+}

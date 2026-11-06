@@ -1,0 +1,8 @@
+import { NextRequest,NextResponse } from 'next/server';
+import { z } from 'zod';
+import { requireAdminRequest,adminJson } from '@/lib/admin-request';
+import { validateBody } from '@/lib/api-helpers';
+import { rateLimit } from '@/lib/rate-limit';
+const schema=z.object({action:z.enum(['approve_post','reject_post','withdraw_post','activate','reject_campaign','pause','spend','release']),id:z.string().uuid().optional(),revision:z.string().uuid().optional(),reason:z.string().trim().min(5).max(1000),amountCents:z.number().int().positive().optional(),requestKey:z.string().uuid().optional(),enabled:z.boolean().optional()}).strict();
+export async function GET(req:NextRequest){const auth=await requireAdminRequest(req);if(auth instanceof NextResponse)return auth;const{data,error}=await auth.supabase.rpc('admin_city_content');return adminJson(error?{error:'Verifica tu sesión administradora en dos pasos.'}:data,{status:error?403:200});}
+export async function POST(req:NextRequest){const auth=await requireAdminRequest(req);if(auth instanceof NextResponse)return auth;const limit=await rateLimit(req,{key:'admin-city-content',subject:auth.user.id,limit:30,windowMs:60_000});if(!limit.ok)return limit.response;const b=await validateBody(req,schema);if(b instanceof NextResponse)return b;const{data,error}=await auth.supabase.rpc('admin_city_content_action',{p_action:b.action,p_id:b.id??null,p_revision:b.revision??null,p_reason:b.reason,p_amount_cents:b.amountCents??null,p_request_key:b.requestKey??null,p_enabled:b.enabled??null});return adminJson(error?{error:error.message==='campaign_budget_exceeded'?'El gasto supera el presupuesto máximo.':'La revisión ha cambiado, faltan requisitos o la sesión necesita verificación en dos pasos.'}:{ok:data},{status:error?400:200});}

@@ -1,0 +1,13 @@
+import React,{useCallback,useRef,useState} from 'react';
+import {ActivityIndicator,Text,View} from 'react-native';
+import {Redirect,useFocusEffect,useRouter} from 'expo-router';
+import {Screen} from '@/components/Screen';
+import {Btn,Card} from '@/components/ui';
+import {useWorkspace} from '@/components/WorkspaceProvider';
+import {C,F} from '@/theme';
+import {EVENT_REFUND_LABEL,type RefundableVisits} from '../../shared/event-lifecycle';
+export default function Page(){const{active,ready,revision}=useWorkspace();if(!ready)return <ActivityIndicator color={C.blue}/>;if(!active)return <Redirect href="/espacios"/>;return <Visits key={`${active.id}:${revision}`}/>;}
+function Visits(){const{active,run,isCurrent}=useWorkspace(),router=useRouter();const[data,setData]=useState<RefundableVisits>({items:[],next_cursor:null}),[error,setError]=useState('');const version=useRef(0);
+ const load=useCallback(async(cursor:string|null=null)=>{if(!active)return;const request=++version.current;try{const next=await run<RefundableVisits>('get_workspace_refundable_visits',{p_cursor:cursor});if(isCurrent(active.id)&&version.current===request)setData(old=>cursor?{items:[...old.items,...next.items.filter(x=>!old.items.some(y=>y.booking_id===x.booking_id))],next_cursor:next.next_cursor}:next);}catch{if(isCurrent(active.id)&&version.current===request)setError('No se pudieron consultar las visitas. Necesitas permiso financiero.');}},[active?.id,run,isCurrent]);useFocusEffect(useCallback(()=>{void load();},[load]));
+ return <Screen title="Pagos de visitas" back><View style={{gap:16}}><Text style={F.small}>Revisa los cobros y solicita o autoriza devoluciones. La agenda y los mensajes se gestionan por separado.</Text>{error?<Text accessibilityRole="alert" style={{color:C.red}}>{error}</Text>:null}{data.items.map(v=><Card key={v.booking_id}><View style={{gap:10}}><Text style={F.h2}>{v.title}</Text><Text style={F.small}>{new Date(v.starts_at).toLocaleString('es-ES')}{v.demo?' · Simulación':''}</Text><Text style={F.body}>{(v.amount_cents/100).toFixed(2)} € · {v.refund_status?EVENT_REFUND_LABEL[v.refund_status]:v.payment_status==='paid'?'Pagada':'Sin solicitud de devolución'}</Text><Btn label="Revisar cobro y devolución" onPress={()=>router.push({pathname:'/espacio-visita-devolucion',params:{booking:v.booking_id}})}/></View></Card>)}{!data.items.length&&<Text style={F.small}>No hay visitas de pago en este espacio.</Text>}{data.next_cursor&&<Btn label="Cargar más" variant="ghost" onPress={()=>void load(data.next_cursor)}/>}<Btn label="Actualizar" variant="ghost" onPress={()=>void load()}/></View></Screen>;
+}

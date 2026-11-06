@@ -1,0 +1,84 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "v2/web/**"
+      - "v2/mobile/**"
+      - ".github/workflows/security.yml"
+      - ".gitleaks.toml"
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # weekly Monday 06:00 UTC
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm-audit:
+    name: npm audit (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: v2/web/package-lock.json
+      - name: Install deps
+        working-directory: v2/web
+        run: npm ci --omit=optional --prefer-offline --no-audit
+      - name: Audit (production only)
+        working-directory: v2/web
+        # We fail only on HIGH or CRITICAL — too noisy otherwise.
+        run: npm audit --omit=dev --audit-level=high
+
+  npm-audit-mobile:
+    name: npm audit móvil (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # No bloqueante por ahora: a 23-sep-2026 hay 8 HIGH que vienen todos de
+    # image-size vía metro/expo (DoS con ICNS/JXL/HEIF). Ya está mitigado en
+    # v2/mobile/metro.config.js y el arreglo real exige Expo 57 (major).
+    # Quitar continue-on-error al subir de SDK.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: v2/mobile/package-lock.json
+      - name: Audit (production only)
+        working-directory: v2/mobile
+        # npm audit lee el package-lock: no hace falta instalar (el postinstall
+        # del móvil parchea dependencias y no aporta nada aquí). Mismo umbral
+        # que la web: solo HIGH o CRITICAL rompen.
+        run: npm audit --omit=dev --audit-level=high
+
+  gitleaks:
+    name: gitleaks (secret scan)
+    permissions:
+      contents: read
+      # The scanner reads the PR commit range through the GitHub API.
+      pull-requests: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          # Findings still fail the job; no PR write permission is needed.
+          GITLEAKS_ENABLE_COMMENTS: "false"

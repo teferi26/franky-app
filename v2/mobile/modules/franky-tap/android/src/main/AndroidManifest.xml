@@ -1,0 +1,26 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+
+  <!-- Android 12 y superiores: permisos de Bluetooth separados por uso.
+       neverForLocation deja claro al sistema y a la tienda que NO se usa el
+       Bluetooth para deducir la posicion de nadie, solo para ver si hay otro
+       telefono pegado al nuestro. -->
+  <uses-permission
+    android:name="android.permission.BLUETOOTH_SCAN"
+    android:usesPermissionFlags="neverForLocation"
+    tools:targetApi="s" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+  <!-- Por debajo de Android 12 el rastreo de Bluetooth exigia permiso de
+       ubicacion. Se limita a esas versiones para no pedirlo de mas. -->
+  <uses-permission
+    android:name="android.permission.ACCESS_FINE_LOCATION"
+    android:maxSdkVersion="30" />
+
+  <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+
+  <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
+</manifest>
