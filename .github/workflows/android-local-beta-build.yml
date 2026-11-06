@@ -168,7 +168,7 @@ jobs:
           printf 'Test APK only. No Google Play upload or submission occurred.\nUse server-registered demo accounts after the matching database/API release.\nThis artifact does not activate professional access for real accounts.\nRemote push and store purchases need separate validation.\nThe package is es.franky.app: it cannot be installed alongside another Franky package with the same identifier; Play signing may differ.\n' > READ-ME.txt
 
       - name: Save only the signed test artifact and checksum
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: franky-android-demo-${{ inputs.version_code }}-${{ github.run_attempt }}
           path: |
